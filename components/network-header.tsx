@@ -21,7 +21,7 @@ export function NetworkHeader() {
             </div>
             <div>
               <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                Xandeum Network
+                Xandeum
               </h1>
               <p className="text-xs text-muted-foreground">
                 pNode Analytics Dashboard

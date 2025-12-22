@@ -6,13 +6,14 @@ export interface PNode {
   address: string;
   ip: string;
   lastSeen: Date;
-  uptime: number;
+  uptime: number; // uptime percentage (0-100)
   version: string;
   storageUsed: number; // bytes
   storageTotal: number; // bytes
   storageCommitted: number; // bytes
   ramUsed?: number; // bytes (optional, enriched from stats)
-  ramTotal?: number;
+  ramTotal?: number; // bytes (optional, enriched from stats)
+  // Display properties
   id: string; // Generated unique ID for UI
   region: string; // Geographic region
   country: string; // Country name
