@@ -9,6 +9,7 @@ A comprehensive, production-ready analytics platform for monitoring Xandeum pNod
 ## 🌟 Features
 
 ### Core Features
+
 - **Real-time pNode Monitoring** - Live status tracking of all pNodes via pRPC gossip protocol
 - **Network Health Analytics** - Comprehensive metrics including uptime, storage, and health scores
 - **Advanced Caching** - Multi-layer caching with node-cache (30s node data, 120s stats, 60s analytics)
@@ -17,6 +18,7 @@ A comprehensive, production-ready analytics platform for monitoring Xandeum pNod
 - **Geographic Distribution** - IP-based geolocation with 24h caching for regional insights
 
 ### UX/UI Enhancements
+
 - **Light & Dark Mode** - System preference detection with manual toggle
 - **Tab Navigation** - Clean tab interface for Overview, pNodes, and Analytics sections
 - **Responsive Design** - Fully responsive across desktop, tablet, and mobile devices
@@ -41,22 +43,26 @@ A comprehensive, production-ready analytics platform for monitoring Xandeum pNod
 ## 🛠 Tech Stack
 
 ### Core Framework
+
 - **Next.js 16** - React framework with App Router, Server Components, and Route Handlers
 - **React 19.2** - Latest React with concurrent features
 - **TypeScript 5** - Type-safe development
 
 ### Data & State Management
+
 - **xandeum-prpc** - Official Xandeum pRPC client for gossip protocol communication
 - **node-cache** - In-memory caching with TTL support
 - **SWR** (via React) - Client-side data fetching and caching
 
 ### UI & Styling
+
 - **Tailwind CSS 4** - Utility-first CSS with custom design system
 - **shadcn/ui** - High-quality React components
 - **Recharts 2.15** - Composable charting library
 - **Lucide React** - Modern icon library
 
 ### Developer Experience
+
 - **ESLint** - Code linting
 - **PostCSS** - CSS processing
 
@@ -182,6 +188,7 @@ pnpm dev
 The dashboard will be available at `http://localhost:3000`
 
 **Features in Development Mode:**
+
 - Hot module replacement
 - Fast refresh
 - TypeScript error reporting
@@ -210,17 +217,17 @@ The dashboard connects to the Xandeum network using the **xandeum-prpc** client 
 
 ```typescript
 // lib/config/prpc.ts
-import { PrpcClient } from "xandeum-prpc"
+import { PrpcClient } from "xandeum-prpc";
 
 const SEED_IPS = [
   "173.212.220.65",
   "161.97.97.41",
   // ... 6 more seed IPs
-]
+];
 
 export const prpcClient = new PrpcClient(SEED_IPS[0], {
   timeout: 10000, // 10 second timeout
-})
+});
 ```
 
 #### 2. Gossip Discovery
@@ -230,12 +237,12 @@ export const prpcClient = new PrpcClient(SEED_IPS[0], {
 async function discoverPNodesViaGossip() {
   // Try primary method with stats
   try {
-    const response = await prpcClient.getPodsWithStats()
-    return response.pods.map(normalizePNode)
+    const response = await prpcClient.getPodsWithStats();
+    return response.pods.map(normalizePNode);
   } catch (error) {
     // Fallback to basic getPods()
-    const response = await prpcClient.getPods()
-    return response.pods.map(normalizePNode)
+    const response = await prpcClient.getPods();
+    return response.pods.map(normalizePNode);
   }
 }
 ```
@@ -245,18 +252,18 @@ async function discoverPNodesViaGossip() {
 For individual node statistics:
 
 ```typescript
-const nodeIp = node.address.split(':')[0]
-const nodeClient = new PrpcClient(nodeIp, { timeout: 8000 })
-const stats = await nodeClient.getStats() // RAM, storage, etc.
+const nodeIp = node.address.split(":")[0];
+const nodeClient = new PrpcClient(nodeIp, { timeout: 8000 });
+const stats = await nodeClient.getStats(); // RAM, storage, etc.
 ```
 
 ### Available pRPC Methods
 
-| Method | Description | Returns |
-|--------|-------------|---------|
-| `getPods()` | Get all pNodes without detailed stats | `{ pods: Pod[] }` |
-| `getPodsWithStats()` | Get all pNodes with enriched statistics | `{ pods: Pod[] }` |
-| `getStats()` | Get detailed stats for a specific node | `{ ram_used, ram_total, storage_* }` |
+| Method               | Description                             | Returns                              |
+| -------------------- | --------------------------------------- | ------------------------------------ |
+| `getPods()`          | Get all pNodes without detailed stats   | `{ pods: Pod[] }`                    |
+| `getPodsWithStats()` | Get all pNodes with enriched statistics | `{ pods: Pod[] }`                    |
+| `getStats()`         | Get detailed stats for a specific node  | `{ ram_used, ram_total, storage_* }` |
 
 ### Seed IPs and Fallback
 
@@ -333,6 +340,7 @@ xandeum-pnode-dashboard/
 Get all pNodes in the network.
 
 **Response:**
+
 ```json
 {
   "nodes": [
@@ -358,9 +366,12 @@ Get all pNodes in the network.
 Get a specific pNode by public key.
 
 **Response:**
+
 ```json
 {
-  "node": { /* PNode object */ }
+  "node": {
+    /* PNode object */
+  }
 }
 ```
 
@@ -369,6 +380,7 @@ Get a specific pNode by public key.
 Get network-wide analytics summary.
 
 **Response:**
+
 ```json
 {
   "totalPNodes": 223,
@@ -389,6 +401,7 @@ Get network-wide analytics summary.
 Get computed metrics for all nodes (health scores, tiers).
 
 **Response:**
+
 ```json
 {
   "metrics": [
@@ -408,12 +421,12 @@ Get computed metrics for all nodes (health scores, tiers).
 
 The application uses **multi-tier caching** with node-cache:
 
-| Cache Service | TTL | Purpose |
-|--------------|-----|---------|
-| `nodeCacheService` | 30s | Raw pNode data from gossip |
-| `statsCacheService` | 120s | Direct node stats (RAM, storage) |
-| `analyticsCacheService` | 60s | Computed analytics & metrics |
-| `geoCacheService` | 24h | IP geolocation results |
+| Cache Service           | TTL  | Purpose                          |
+| ----------------------- | ---- | -------------------------------- |
+| `nodeCacheService`      | 30s  | Raw pNode data from gossip       |
+| `statsCacheService`     | 120s | Direct node stats (RAM, storage) |
+| `analyticsCacheService` | 60s  | Computed analytics & metrics     |
+| `geoCacheService`       | 24h  | IP geolocation results           |
 
 ### Cache Benefits
 
@@ -427,28 +440,30 @@ The application uses **multi-tier caching** with node-cache:
 Caches auto-expire based on TTL. To manually clear:
 
 ```typescript
-import { nodeCacheService } from '@/lib/services/cache.service'
+import { nodeCacheService } from "@/lib/services/cache.service";
 
-nodeCacheService.flush() // Clear all cached nodes
+nodeCacheService.flush(); // Clear all cached nodes
 ```
 
 ## 🔧 Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ONLINE_THRESHOLD_SECONDS` | `300` | Time threshold for considering a node online (5 minutes) |
-| `DEBUG_CALCULATIONS` | `false` | Enable debug logging for health score calculations |
+| Variable                   | Default | Description                                              |
+| -------------------------- | ------- | -------------------------------------------------------- |
+| `ONLINE_THRESHOLD_SECONDS` | `300`   | Time threshold for considering a node online (5 minutes) |
+| `DEBUG_CALCULATIONS`       | `false` | Enable debug logging for health score calculations       |
 
 ## 🚢 Deployment
 
 ### Vercel (Recommended)
 
 1. **Push to GitHub**
+
    ```bash
    git push origin main
    ```
 
 2. **Import to Vercel**
+
    - Go to [vercel.com](https://vercel.com)
    - Click "Import Project"
    - Select your repository
@@ -501,9 +516,9 @@ pm2 startup
 ```typescript
 // lib/services/analytics.service.ts
 export async function getCustomMetric(): Promise<CustomMetric> {
-  const nodes = await getAllPNodes()
+  const nodes = await getAllPNodes();
   // Your calculation logic
-  return result
+  return result;
 }
 ```
 
@@ -511,11 +526,11 @@ export async function getCustomMetric(): Promise<CustomMetric> {
 
 ```typescript
 // app/api/analytics/custom/route.ts
-import { getCustomMetric } from "@/lib/services/analytics.service"
+import { getCustomMetric } from "@/lib/services/analytics.service";
 
 export async function GET() {
-  const metric = await getCustomMetric()
-  return NextResponse.json(metric)
+  const metric = await getCustomMetric();
+  return NextResponse.json(metric);
 }
 ```
 
@@ -524,7 +539,7 @@ export async function GET() {
 ```tsx
 // components/custom-metric-chart.tsx
 export function CustomMetricChart({ data }: Props) {
-  return <ResponsiveContainer>...</ResponsiveContainer>
+  return <ResponsiveContainer>...</ResponsiveContainer>;
 }
 ```
 
@@ -535,8 +550,8 @@ If xandeum-prpc adds new methods:
 ```typescript
 // lib/services/pnode.service.ts
 export async function getNewFeature() {
-  const response = await prpcClient.newMethod()
-  return processResponse(response)
+  const response = await prpcClient.newMethod();
+  return processResponse(response);
 }
 ```
 
@@ -546,7 +561,7 @@ export async function getNewFeature() {
 // lib/types.ts
 export interface PNode {
   // ... existing fields
-  customField: string // Add new field
+  customField: string; // Add new field
 }
 
 // lib/utils/format.ts
@@ -554,7 +569,7 @@ export function normalizePNode(pod: Pod): PNode {
   return {
     // ... existing fields
     customField: pod.custom_field || "default", // Map new field
-  }
+  };
 }
 ```
 
@@ -574,27 +589,35 @@ export function normalizePNode(pod: Pod): PNode {
 ### Color Palette
 
 **Light Mode:**
+
 - Background: `oklch(0.98 0.005 265)`
 - Primary: `oklch(0.55 0.22 265)` (Purple)
 - Charts: Green, Cyan, Orange, Red, Yellow
 
 **Dark Mode:**
+
 - Background: `oklch(0.12 0.01 265)`
 - Primary: `oklch(0.65 0.25 265)` (Bright Purple)
 - Charts: Vibrant Green, Cyan, Orange, Red, Yellow
 
 ### Typography
+
 - **Font Family**: Geist Sans (body), Geist Mono (code)
 - **Scale**: Responsive text sizing with Tailwind utilities
 - **Line Height**: Optimized for readability (1.5-1.75)
 
 ### Animations
+
 ```css
 /* Fade-in animation for cards */
-.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
 
 /* Stagger animation for grid items */
-.stagger-item:nth-child(n) { animation-delay: calc(n * 0.05s); }
+.stagger-item:nth-child(n) {
+  animation-delay: calc(n * 0.05s);
+}
 ```
 
 ## 🎨 Theme Support
@@ -602,16 +625,19 @@ export function normalizePNode(pod: Pod): PNode {
 The dashboard includes a comprehensive theming system:
 
 ### Light Mode
+
 - Clean, bright interface with high contrast
 - Optimized for daylight viewing
 - Professional color palette
 
 ### Dark Mode (Default)
+
 - Sophisticated dark theme inspired by observability dashboards
 - Reduced eye strain for extended use
 - Rich color accents for data visualization
 
 ### Theme Toggle
+
 ```tsx
 // Theme automatically detects system preference
 // Manual toggle available in header
@@ -621,6 +647,7 @@ The dashboard includes a comprehensive theming system:
 ## 📊 Features Overview
 
 ### Overview Page (/)
+
 - Network health banner with real-time health score
 - Key metrics: Total pNodes, Online Nodes, Storage Capacity, Average Uptime
 - Status breakdown (Online, Degraded, Offline)
@@ -631,6 +658,7 @@ The dashboard includes a comprehensive theming system:
 - Recent activity feed
 
 ### pNodes Page (/nodes)
+
 - **Comprehensive table with:**
   - Advanced search (ID, pubkey, region, country)
   - Multi-filter (status, region)
@@ -641,6 +669,7 @@ The dashboard includes a comprehensive theming system:
 - Fully responsive on all screen sizes
 
 ### Analytics Page (/analytics)
+
 - Network health metrics (health %, avg uptime 24h, avg health score, storage pressure)
 - Top performing pNodes leaderboard
 - Regional distribution analysis
@@ -649,6 +678,7 @@ The dashboard includes a comprehensive theming system:
 - Network status overview
 
 ### Node Detail Page (/nodes/[id])
+
 - Comprehensive node information
 - Storage details with health indicators
 - Performance metrics and reliability scores
@@ -681,5 +711,3 @@ For issues or questions:
 ---
 
 **Built with ❤️ for the Xandeum community**
-
-*Last Updated: January 2025*
