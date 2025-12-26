@@ -15,6 +15,7 @@ export function Footer() {
                 href="http://xandeum.network"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="text-lg text-green-700"
               >
                 Xandeum
               </a>{" "}
