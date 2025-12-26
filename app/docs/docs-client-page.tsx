@@ -55,6 +55,10 @@ const sections = [
 
 export default function DocsClientPage() {
   const [activeSection, setActiveSection] = useState("getting-started");
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredSections = sections.filter((section) =>
+    section.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -80,13 +84,15 @@ export default function DocsClientPage() {
               <input
                 type="text"
                 placeholder="Search docs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
 
             {/* Navigation Links */}
             <nav className="space-y-1">
-              {sections.map((section) => {
+              {filteredSections.map((section) => {
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
                 return (
