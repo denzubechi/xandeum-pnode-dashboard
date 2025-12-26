@@ -1,56 +1,59 @@
-import NodeCache from "node-cache"
+import NodeCache from "node-cache";
 
 /**
  * Cache Service using node-cache
  *
  * Provides in-memory caching with TTL support for:
- * - pNode data (30s TTL)
+ * - pNode data (30s TTL in dev, 10s in production)
  * - Node stats (120s TTL)
  * - Analytics (60s TTL)
  * - Geo location (24h TTL)
  */
 
 class CacheService {
-  private cache: NodeCache
+  private cache: NodeCache;
 
   constructor(defaultTtlSeconds: number) {
     this.cache = new NodeCache({
       stdTTL: defaultTtlSeconds,
       checkperiod: defaultTtlSeconds * 0.2,
       useClones: false, // Better performance, data should be immutable
-    })
+    });
   }
 
   get<T>(key: string): T | undefined {
-    return this.cache.get<T>(key)
+    return this.cache.get<T>(key);
   }
 
   set<T>(key: string, value: T, ttlSeconds?: number): boolean {
     if (ttlSeconds !== undefined) {
-      return this.cache.set(key, value, ttlSeconds)
+      return this.cache.set(key, value, ttlSeconds);
     }
-    return this.cache.set(key, value)
+    return this.cache.set(key, value);
   }
 
   delete(key: string): number {
-    return this.cache.del(key)
+    return this.cache.del(key);
   }
 
   flush(): void {
-    this.cache.flushAll()
+    this.cache.flushAll();
   }
 
   keys(): string[] {
-    return this.cache.keys()
+    return this.cache.keys();
   }
 
   getStats() {
-    return this.cache.getStats()
+    return this.cache.getStats();
   }
 }
 
+const isProduction = process.env.NODE_ENV === "production";
+const pnodeCacheTtl = isProduction ? 10 : 30; // 10s in prod, 30s in dev
+
 // Create service instances with different TTLs
-export const nodeCacheService = new CacheService(30) // 30 seconds for node data
-export const statsCacheService = new CacheService(120) // 120 seconds for stats
-export const analyticsCacheService = new CacheService(60) // 60 seconds for analytics
-export const geoCacheService = new CacheService(86400) // 24 hours for geo data
+export const nodeCacheService = new CacheService(pnodeCacheTtl);
+export const statsCacheService = new CacheService(120); // 120 seconds for stats
+export const analyticsCacheService = new CacheService(60); // 60 seconds for analytics
+export const geoCacheService = new CacheService(86400); // 24 hours for geo data

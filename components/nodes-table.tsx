@@ -1,143 +1,193 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { ArrowUpDown, Copy, Search, Filter } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { StatusBadge } from "@/components/status-badge"
-import { Pagination } from "@/components/pagination"
-import { useToast } from "@/hooks/use-toast"
-import type { PNode, PNodeStatus } from "@/lib/types"
+import { useState, useMemo } from "react";
+import { ArrowUpDown, Copy, Search, Filter, Download } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { StatusBadge } from "@/components/status-badge";
+import { Pagination } from "@/components/pagination";
+import { useToast } from "@/hooks/use-toast";
+import { exportToCSV } from "@/lib/utils/csv-export";
+import type { PNode, PNodeStatus } from "@/lib/types";
 
 interface NodesTableProps {
-  nodes: PNode[]
+  nodes: PNode[];
 }
 
-type SortKey = "id" | "status" | "region" | "uptime" | "storage" | "lastSeen"
-type SortDirection = "asc" | "desc"
+type SortKey = "id" | "status" | "region" | "uptime" | "storage" | "lastSeen";
+type SortDirection = "asc" | "desc";
 
 export function NodesTable({ nodes }: NodesTableProps) {
-  const { toast } = useToast()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<PNodeStatus | "all">("all")
-  const [regionFilter, setRegionFilter] = useState<string>("all")
-  const [sortKey, setSortKey] = useState<SortKey>("lastSeen")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<PNodeStatus | "all">("all");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("lastSeen");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Get unique regions for filter
   const regions = useMemo(() => {
-    const uniqueRegions = Array.from(new Set(nodes.map((n) => n.region)))
-    return uniqueRegions.sort()
-  }, [nodes])
+    const uniqueRegions = Array.from(new Set(nodes.map((n) => n.region)));
+    return uniqueRegions.sort();
+  }, [nodes]);
 
   // Filter and sort nodes
   const filteredNodes = useMemo(() => {
-    let filtered = nodes
+    let filtered = nodes;
 
     // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (node) =>
           node.id.toLowerCase().includes(query) ||
           node.pubkey.toLowerCase().includes(query) ||
           node.region.toLowerCase().includes(query) ||
-          node.country.toLowerCase().includes(query),
-      )
+          node.country.toLowerCase().includes(query)
+      );
     }
 
     // Apply status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter((node) => node.status === statusFilter)
+      filtered = filtered.filter((node) => node.status === statusFilter);
     }
 
     // Apply region filter
     if (regionFilter !== "all") {
-      filtered = filtered.filter((node) => node.region === regionFilter)
+      filtered = filtered.filter((node) => node.region === regionFilter);
     }
 
     // Apply sorting
     filtered = [...filtered].sort((a, b) => {
-      let comparison = 0
+      let comparison = 0;
 
       switch (sortKey) {
         case "id":
-          comparison = a.id.localeCompare(b.id)
-          break
+          comparison = a.id.localeCompare(b.id);
+          break;
         case "status":
-          comparison = a.status.localeCompare(b.status)
-          break
+          comparison = a.status.localeCompare(b.status);
+          break;
         case "region":
-          comparison = a.region.localeCompare(b.region)
-          break
+          comparison = a.region.localeCompare(b.region);
+          break;
         case "uptime":
-          comparison = a.uptimePercentage - b.uptimePercentage
-          break
+          comparison = a.uptimePercentage - b.uptimePercentage;
+          break;
         case "storage":
-          comparison = a.storageUsedGB / a.storageCapacityGB - b.storageUsedGB / b.storageCapacityGB
-          break
+          comparison =
+            a.storageUsedGB / a.storageCapacityGB -
+            b.storageUsedGB / b.storageCapacityGB;
+          break;
         case "lastSeen":
-          comparison = a.lastSeen.getTime() - b.lastSeen.getTime()
-          break
+          comparison = a.lastSeen.getTime() - b.lastSeen.getTime();
+          break;
       }
 
-      return sortDirection === "asc" ? comparison : -comparison
-    })
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
 
-    return filtered
-  }, [nodes, searchQuery, statusFilter, regionFilter, sortKey, sortDirection])
+    return filtered;
+  }, [nodes, searchQuery, statusFilter, regionFilter, sortKey, sortDirection]);
 
   const paginatedNodes = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize
-    return filteredNodes.slice(startIndex, startIndex + pageSize)
-  }, [filteredNodes, currentPage, pageSize])
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredNodes.slice(startIndex, startIndex + pageSize);
+  }, [filteredNodes, currentPage, pageSize]);
 
-  const totalPages = Math.ceil(filteredNodes.length / pageSize)
+  const totalPages = Math.ceil(filteredNodes.length / pageSize);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      setSortKey(key)
-      setSortDirection("desc")
+      setSortKey(key);
+      setSortDirection("desc");
     }
-  }
+  };
 
   const handlePageSizeChange = (size: number) => {
-    setPageSize(size)
-    setCurrentPage(1)
-  }
+    setPageSize(size);
+    setCurrentPage(1);
+  };
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(text);
     toast({
       title: "Copied to clipboard",
       description: `${label} has been copied to your clipboard.`,
-    })
-  }
+    });
+  };
 
   const formatLastSeen = (date: Date) => {
-    const minutes = Math.round((Date.now() - date.getTime()) / 60000)
-    if (minutes < 1) return "Just now"
-    if (minutes < 60) return `${minutes}m ago`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `${hours}h ago`
-    const days = Math.floor(hours / 24)
-    return `${days}d ago`
-  }
+    const minutes = Math.round((Date.now() - date.getTime()) / 60000);
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
+  const handleExportCSV = () => {
+    const exportData = filteredNodes.map((node) => ({
+      "Node ID": node.id,
+      "Public Key": node.pubkey,
+      Status: node.status,
+      Region: node.region,
+      Country: node.country,
+      "Uptime %": node.uptimePercentage.toFixed(2),
+      "Storage Used GB": node.storageUsedGB,
+      "Storage Capacity GB": node.storageCapacityGB,
+      "Storage Used %": (
+        (node.storageUsedGB / node.storageCapacityGB) *
+        100
+      ).toFixed(2),
+      "Last Seen": node.lastSeen.toISOString(),
+    }));
+
+    exportToCSV(exportData, "xandeum-pnodes");
+    toast({
+      title: "Export successful",
+      description: `Exported ${exportData.length} nodes to CSV`,
+    });
+  };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>pNode Network</CardTitle>
-        <CardDescription>
-          {filteredNodes.length} of {nodes.length} nodes displayed
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>pNode Network</CardTitle>
+          <CardDescription>
+            {filteredNodes.length} of {nodes.length} nodes displayed
+          </CardDescription>
+        </div>
+        <Button
+          onClick={handleExportCSV}
+          variant="outline"
+          size="sm"
+          className="gap-2 bg-transparent"
+        >
+          <Download className="size-4" />
+          Export CSV
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
@@ -153,7 +203,12 @@ export function NodesTable({ nodes }: NodesTableProps) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as PNodeStatus | "all")}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) =>
+                setStatusFilter(value as PNodeStatus | "all")
+              }
+            >
               <SelectTrigger className="w-[140px]">
                 <Filter className="mr-2 size-4" />
                 <SelectValue placeholder="Status" />
@@ -180,13 +235,15 @@ export function NodesTable({ nodes }: NodesTableProps) {
               </SelectContent>
             </Select>
 
-            {(searchQuery || statusFilter !== "all" || regionFilter !== "all") && (
+            {(searchQuery ||
+              statusFilter !== "all" ||
+              regionFilter !== "all") && (
               <Button
                 variant="ghost"
                 onClick={() => {
-                  setSearchQuery("")
-                  setStatusFilter("all")
-                  setRegionFilter("all")
+                  setSearchQuery("");
+                  setStatusFilter("all");
+                  setRegionFilter("all");
                 }}
                 className="h-10"
               >
@@ -202,7 +259,12 @@ export function NodesTable({ nodes }: NodesTableProps) {
             <thead className="border-b border-border bg-muted/30">
               <tr>
                 <th className="px-4 py-3 text-left">
-                  <Button variant="ghost" size="sm" onClick={() => handleSort("id")} className="-ml-2 h-8 font-medium">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSort("id")}
+                    className="-ml-2 h-8 font-medium"
+                  >
                     Node ID
                     <ArrowUpDown className="ml-2 size-3" />
                   </Button>
@@ -262,37 +324,53 @@ export function NodesTable({ nodes }: NodesTableProps) {
                     <ArrowUpDown className="ml-2 size-3" />
                   </Button>
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-foreground">Actions</th>
+                <th className="px-4 py-3 text-right font-medium text-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {paginatedNodes.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center text-sm text-muted-foreground"
+                  >
                     No nodes found matching your filters.
                   </td>
                 </tr>
               ) : (
                 paginatedNodes.map((node) => (
-                  <tr key={node.id} className="group border-b border-border/50 transition-colors hover:bg-muted/30">
+                  <tr
+                    key={node.id}
+                    className="group border-b border-border/50 transition-colors hover:bg-muted/30"
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-medium text-foreground">{node.id}</span>
+                        <span className="font-mono text-sm font-medium text-foreground">
+                          {node.id}
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(node.pubkey, "Public key")}
+                          onClick={() =>
+                            copyToClipboard(node.pubkey, "Public key")
+                          }
                           className="h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
                         >
                           <Copy className="size-3" />
                         </Button>
                       </div>
                       <div className="mt-1 flex items-center gap-1 font-mono text-xs text-muted-foreground">
-                        <span className="truncate max-w-[200px]">{node.pubkey.slice(0, 16)}...</span>
+                        <span className="truncate max-w-[200px]">
+                          {node.pubkey.slice(0, 16)}...
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(node.pubkey, "Public key")}
+                          onClick={() =>
+                            copyToClipboard(node.pubkey, "Public key")
+                          }
                           className="h-4 w-4 p-0"
                         >
                           <Copy className="size-2.5" />
@@ -304,21 +382,27 @@ export function NodesTable({ nodes }: NodesTableProps) {
                     </td>
                     <td className="px-4 py-3">
                       <div>
-                        <p className="text-sm font-medium text-foreground">{node.region}</p>
-                        <p className="text-xs text-muted-foreground">{node.country}</p>
+                        <p className="text-sm font-medium text-foreground">
+                          {node.region}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {node.country}
+                        </p>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">{node.uptimePercentage.toFixed(1)}%</span>
+                        <span className="text-sm font-medium text-foreground">
+                          {node.uptimePercentage.toFixed(1)}%
+                        </span>
                         <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
                           <div
                             className={`h-full rounded-full transition-all ${
                               node.uptimePercentage >= 95
                                 ? "bg-chart-3"
                                 : node.uptimePercentage >= 85
-                                  ? "bg-chart-5"
-                                  : "bg-chart-4"
+                                ? "bg-chart-5"
+                                : "bg-chart-4"
                             }`}
                             style={{ width: `${node.uptimePercentage}%` }}
                           />
@@ -331,12 +415,17 @@ export function NodesTable({ nodes }: NodesTableProps) {
                           {node.storageUsedGB} / {node.storageCapacityGB} GB
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {Math.round((node.storageUsedGB / node.storageCapacityGB) * 100)}% used
+                          {Math.round(
+                            (node.storageUsedGB / node.storageCapacityGB) * 100
+                          )}
+                          % used
                         </p>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-muted-foreground">{formatLastSeen(node.lastSeen)}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {formatLastSeen(node.lastSeen)}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/nodes/${node.id}`}>
@@ -364,5 +453,5 @@ export function NodesTable({ nodes }: NodesTableProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

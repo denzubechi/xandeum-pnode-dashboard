@@ -10,8 +10,15 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="text-center text-sm text-muted-foreground sm:text-left">
             <p>
-              Built with <span className="text-red-500">❤</span> for Xandeum | ©{" "}
-              {currentYear} Xandeum Network
+              Built with <span className="text-red-500">❤</span> for{" "}
+              <a
+                href="http://xandeum.network"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Xandeum
+              </a>{" "}
+              | © {currentYear}
             </p>
           </div>
 

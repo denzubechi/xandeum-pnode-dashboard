@@ -11,7 +11,6 @@ import type { PNode, NodeStats } from "../types";
 import type { Pod } from "xandeum-prpc";
 
 const CACHE_KEY = "pnodes";
-const CACHE_TTL_SECONDS = 30;
 
 async function discoverPNodesViaGossip(): Promise<PNode[]> {
   const discoveredNodes: PNode[] = [];
@@ -108,8 +107,11 @@ export async function getAllPNodes(): Promise<PNode[]> {
   const enrichedNodes = await enrichPNodesWithGeo(uniqueNodes, 20);
   console.log("   ✅ Geographic enrichment complete");
 
-  nodeCacheService.set(CACHE_KEY, enrichedNodes, CACHE_TTL_SECONDS);
-  console.log(`   ✅ Cached ${enrichedNodes.length} nodes`);
+  const isProduction = process.env.NODE_ENV === "production";
+  const cacheTtl = isProduction ? 10 : 30;
+
+  nodeCacheService.set(CACHE_KEY, enrichedNodes, cacheTtl);
+  console.log(`   ✅ Cached ${enrichedNodes.length} nodes (TTL: ${cacheTtl}s)`);
 
   return enrichedNodes;
 }
@@ -153,22 +155,21 @@ export async function getNodeStatsByPubkey(
 
     const nodeIp = nodeAddress.split(":")[0];
     const nodeClient = new PrpcClient(nodeIp, { timeout: 8000 });
-    const response = await nodeClient.getStats();
+    const rawStats = (await nodeClient.getStats()) as Record<string, any>;
 
-    if (!response) {
-      return null;
+    if (rawStats) {
+      const normalizedStats: NodeStats = {
+        ram_used: Number(rawStats["ram_used"] ?? 0),
+        ram_total: Number(rawStats["ram_total"] ?? 0),
+        storage_used: Number(rawStats["storage_used"] ?? 0),
+        storage_committed: Number(rawStats["storage_committed"] ?? 0),
+      };
+
+      statsCacheService.set(CACHE_KEY, normalizedStats, CACHE_TTL_SECONDS);
+      return normalizedStats;
     }
 
-    const stats = {
-      ram_used: (response as any).ram_used,
-      ram_total: (response as any).ram_total,
-      storage_used: (response as any).storage_used,
-      storage_committed: (response as any).storage_committed,
-    } as NodeStats;
-
-    statsCacheService.set(CACHE_KEY, stats, CACHE_TTL_SECONDS);
-
-    return stats;
+    return null;
   } catch (error) {
     return null;
   }

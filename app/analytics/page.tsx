@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Activity,
   Award,
@@ -5,6 +7,7 @@ import {
   HardDrive,
   Server,
   TrendingUp,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -24,6 +27,8 @@ import {
   getTopNodes,
   getVersionDistribution,
 } from "@/lib/services/analytics.service";
+import { TopNodesExport } from "@/components/top-nodes-export";
+import { exportToCSV } from "@/lib/utils/csv-export";
 
 export default async function AnalyticsPage() {
   const [summary, extendedSummary, topNodes, versionDist, nodes] =
@@ -102,11 +107,40 @@ export default async function AnalyticsPage() {
             className="animate-fade-in transition-all hover:border-primary/50"
             style={{ animationDelay: "0.1s" }}
           >
-            <CardHeader>
-              <CardTitle>Top Performing pNodes</CardTitle>
-              <CardDescription>
-                Highest health scores in the network
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Top Performing pNodes</CardTitle>
+                <CardDescription>
+                  Highest health scores in the network
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const exportData = topNodes.map((node, idx) => ({
+                      Rank: idx + 1,
+                      "Node ID":
+                        nodes.find((n) => n.pubkey === node.pubkey)?.id ||
+                        node.pubkey.slice(0, 8),
+                      "Public Key": node.pubkey,
+                      Region:
+                        nodes.find((n) => n.pubkey === node.pubkey)?.region ||
+                        "Unknown",
+                      "Health Score": node.healthScore.toFixed(2),
+                      "Uptime 24h %": node.uptime24h.toFixed(2),
+                      Status:
+                        nodes.find((n) => n.pubkey === node.pubkey)?.status ||
+                        "unknown",
+                    }));
+                    exportToCSV(exportData, "top-nodes");
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors"
+                >
+                  <Download className="size-4" />
+                  Export
+                </button>
+                <TopNodesExport topNodes={topNodes} nodes={nodes} />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

@@ -42,13 +42,14 @@ export function NetworkHeader() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <NavTabs />
             <Link href="/docs">
               <Button variant="ghost" size="sm" className="gap-2">
                 <BookOpen className="size-4" />
                 <span className="hidden sm:inline">Docs</span>
               </Button>
             </Link>
+            <NavTabs />
+
             <Button
               variant="ghost"
               size="icon"
