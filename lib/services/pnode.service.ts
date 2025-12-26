@@ -153,11 +153,20 @@ export async function getNodeStatsByPubkey(
 
     const nodeIp = nodeAddress.split(":")[0];
     const nodeClient = new PrpcClient(nodeIp, { timeout: 8000 });
-    const stats = await nodeClient.getStats();
+    const response = await nodeClient.getStats();
 
-    if (stats) {
-      statsCacheService.set(CACHE_KEY, stats, CACHE_TTL_SECONDS);
+    if (!response) {
+      return null;
     }
+
+    const stats = {
+      ram_used: (response as any).ram_used,
+      ram_total: (response as any).ram_total,
+      storage_used: (response as any).storage_used,
+      storage_committed: (response as any).storage_committed,
+    } as NodeStats;
+
+    statsCacheService.set(CACHE_KEY, stats, CACHE_TTL_SECONDS);
 
     return stats;
   } catch (error) {

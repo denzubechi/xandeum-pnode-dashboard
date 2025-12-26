@@ -1,11 +1,23 @@
 "use client";
 
-import { Network } from "lucide-react";
+import { RefreshCw, BookOpen } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { NavTabs } from "@/components/nav-tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
+import { Button } from "./ui/button";
 export function NetworkHeader() {
+  const router = useRouter();
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    router.refresh();
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-md">
       <div className="container mx-auto px-4 py-4">
@@ -31,6 +43,24 @@ export function NetworkHeader() {
 
           <div className="flex items-center gap-3">
             <NavTabs />
+            <Link href="/docs">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <BookOpen className="size-4" />
+                <span className="hidden sm:inline">Docs</span>
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title="Refresh data"
+              className="h-10 w-10"
+            >
+              <RefreshCw
+                className={`size-4 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+            </Button>
             <ThemeToggle />
           </div>
         </div>
